@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 
 from app.core.database import check_database_connection
+from app.routes import documents
 
 app = FastAPI(title="AI Operations Assistant API")
+app.include_router(documents.router)
 
 
 @app.get("/")
