@@ -1,0 +1,662 @@
+
+
+=== PAGE 1 ===
+AI OPERATIONS ASSISTANT
+ SaaS Platform — Product Requirements Document
+ v1.0
+ 2026
+ MVP SCOPE
+ "An AI employee that helps small businesses handle repetitive work —
+ intelligently, automatically, and at scale."
+ 90-Day Build
+ 6 Core Modules
+ SMB-Focused
+ Full-Stack SaaS
+
+
+=== PAGE 2 ===
+1. Project Overview
+The AI Operations Assistant is a multi-module SaaS platform designed to replace repetitive manual tasks in
+small and medium businesses (SMBs). It combines document intelligence, automated customer support,
+lead processing, and admin automation — all accessible through a clean web dashboard. The platform is
+built on a Retrieval-Augmented Generation (RAG) engine and is extensible via n8n workflow automation.
+Problem Statement
+Small businesses in Bangladesh and globally struggle with repetitive operational tasks: answering the same
+customer questions, manually processing leads, onboarding new staff, and generating routine documents.
+Hiring staff for these tasks is expensive; most SMBs lack the budget or technical team to deploy AI solutions
+themselves. This platform solves that gap.
+Solution
+Without This Platform
+With This Platform
+Staff manually answers repeat FAQs
+AI instantly answers from uploaded docs
+Leads manually reviewed and summarized
+AI extracts key info automatically
+New staff takes weeks to onboard
+Staff queries the knowledge base in seconds
+Reports manually compiled
+AI generates summaries on demand
+Email replies typed from scratch
+AI drafts professional replies instantly
+2. Target Users
+Segment
+Primary Use Case
+Agencies & Consulting Firms
+Need automated client reporting, lead handling, and knowledge bases for multiple clients.
+Coaching & Training Centers
+Require FAQ bots, student onboarding docs, and schedule assistants.
+Clinics & Healthcare Offices
+Use document search for procedures, patient FAQs, and appointment-related email drafts.
+E-commerce Stores
+Need lead qualification, order-related FAQ handling, and policy-based customer support.
+Law Firms & Real Estate Offices
+Heavy document workflows — case summaries, contract Q&A, client intake automation.
+
+
+=== PAGE 3 ===
+3. Core Features (MVP)
+Module 1
+Document Intelligence (RAG Engine)
+ Users upload company documents: PDFs, Word docs, policy files, SOPs, manuals.
+ 
+ Files are chunked, embedded, and stored in a FAISS or Chroma vector store.
+ 
+ Users can ask natural-language questions; the AI retrieves relevant chunks and answers with source
+ citations.
+ Supports multi-document workspaces per business account.
+ 
+ Admin can tag, delete, and update documents through the dashboard.
+ 
+Module 2
+Customer Support AI
+ Embeds FAQ knowledge into a chat interface that businesses can use internally.
+ 
+ Answers customer queries using only the company's uploaded documents.
+ 
+ Falls back gracefully when the answer is not in the knowledge base.
+ 
+ Logs all unanswered queries so the business can fill knowledge gaps.
+ 
+ Optionally integrates with n8n to push queries from email/WhatsApp into the assistant.
+ 
+Module 3
+Email Draft Generator
+ User pastes a raw customer email or inquiry into the interface.
+ 
+ AI generates a professional reply based on company tone and uploaded context.
+ 
+ User can edit, regenerate, or copy the draft with one click.
+ 
+ Optional tone selector: Formal, Friendly, Concise.
+ 
+ Can be automated via n8n: incoming Gmail → AI draft → saved as draft in Gmail.
+ 
+Module 4
+Lead Summarizer & Qualifier
+ User pastes a raw lead inquiry or form submission.
+ 
+ AI extracts: name, interest, budget, urgency, and key questions.
+ 
+ Outputs a structured lead card: summary, recommended action, priority score.
+ 
+ Leads are stored in a leads database within the dashboard.
+ 
+ Optionally automated via n8n: form submission → AI summary → CRM entry.
+ 
+Module 5
+Internal Knowledge Base
+ Acts as a smart onboarding assistant for new staff.
+ 
+ Staff can ask: 'What is our refund policy?' or 'How do I handle a complaint?'
+ 
+ AI answers from company-uploaded docs with exact source references.
+ 
+ Reduces onboarding time significantly for growing teams.
+ 
+ Admins can version-control documents (update old → archive old chunks).
+ 
+Module 6
+Admin Report & Summary Generator
+ User pastes meeting notes, raw data, or a transcript.
+ 
+ AI generates a clean structured summary with action items and highlights.
+ 
+ Can produce: weekly summaries, meeting minutes, client reports.
+ 
+ Optionally triggered via n8n on a schedule (daily/weekly digest).
+
+
+=== PAGE 4 ===
+ Output can be copied, downloaded, or sent via email through the dashboard.
+
+
+=== PAGE 5 ===
+4. Technology Stack
+Layer
+Technology
+Purpose
+Frontend
+React + Tailwind CSS
+User dashboard, chat UI, forms
+Backend
+FastAPI (Python)
+REST API, business logic, auth
+Database
+PostgreSQL
+Users, leads, docs metadata, logs
+Vector Store
+FAISS / Chroma
+Embedding storage for RAG
+AI Layer
+OpenAI GPT-4o API
+LLM completions, embeddings
+Embeddings
+text-embedding-3-small
+Document vectorization
+Automation
+n8n (self-hosted or cloud)
+Email, lead, and scheduling workflows
+Auth
+JWT + bcrypt
+User login, session management
+Hosting (FE)
+Vercel
+Frontend deployment
+Hosting (BE)
+Render / Railway
+Backend API deployment
+File Storage
+AWS S3 / Cloudflare R2
+Document upload storage
+n8n Integration Strategy: n8n handles all automation triggers and background workflows — it is
+the automation layer, not the app layer. The React + FastAPI stack handles the user-facing
+product, billing, auth, and analytics. n8n connects external tools (Gmail, WhatsApp, Google
+Sheets, CRMs) to your FastAPI backend via webhooks. This hybrid approach allows rapid
+feature delivery without sacrificing engineering depth.
+
+
+=== PAGE 6 ===
+5. Database Schema (Core Tables)
+Table: users
+Column
+Type
+Description
+id
+UUID
+Primary key
+email
+VARCHAR(255)
+Unique login email
+password_hash
+TEXT
+bcrypt hashed password
+business_name
+VARCHAR(255)
+Business display name
+plan
+VARCHAR(50)
+free / pro / enterprise
+created_at
+TIMESTAMP
+Account creation time
+Table: documents
+Column
+Type
+Description
+id
+UUID
+Primary key
+user_id
+UUID FK
+Owner reference
+filename
+TEXT
+Original file name
+storage_url
+TEXT
+S3/R2 file URL
+chunk_count
+INTEGER
+Number of embedded chunks
+status
+VARCHAR(50)
+processing / ready / error
+uploaded_at
+TIMESTAMP
+Upload timestamp
+Table: chat_logs
+Column
+Type
+Description
+id
+UUID
+Primary key
+user_id
+UUID FK
+Owner reference
+question
+TEXT
+User's query
+answer
+TEXT
+AI-generated response
+source_doc_ids
+TEXT[]
+Docs used in answer
+module
+VARCHAR(50)
+doc_qa / support / etc.
+created_at
+TIMESTAMP
+Query timestamp
+Table: leads
+Column
+Type
+Description
+id
+UUID
+Primary key
+user_id
+UUID FK
+Owner reference
+
+
+=== PAGE 7 ===
+raw_input
+TEXT
+Original inquiry text
+name
+TEXT
+Extracted lead name
+interest
+TEXT
+Extracted product/service interest
+budget
+TEXT
+Extracted budget mention
+urgency
+VARCHAR(50)
+high / medium / low
+priority_score
+INTEGER
+AI-generated 1–10 score
+created_at
+TIMESTAMP
+Submission timestamp
+
+
+=== PAGE 8 ===
+6. Key API Endpoints
+Method
+Endpoint
+Description
+POST
+/auth/register
+Register new user account
+POST
+/auth/login
+Login, returns JWT token
+POST
+/documents/upload
+Upload document file
+GET
+/documents/
+List all user documents
+DELETE
+/documents/{id}
+Delete document and embeddings
+POST
+/chat/query
+RAG-based document Q&A
+POST
+/support/answer
+Customer support AI response
+POST
+/email/draft
+Generate email reply draft
+POST
+/leads/summarize
+Extract and score a lead
+GET
+/leads/
+List all stored leads
+POST
+/reports/summarize
+Generate meeting/report summary
+GET
+/dashboard/stats
+Usage stats for dashboard
+
+
+=== PAGE 9 ===
+7. UI Pages & Dashboard Layout
+Login / Register Page
+ Email + password fields with JWT-based auth.
+ 
+ Link to register new business account.
+ 
+ Redirect to Dashboard on success.
+ 
+Dashboard (Home)
+ Welcome card with business name.
+ 
+ Quick stats: docs uploaded, queries made, leads captured.
+ 
+ Shortcut buttons to all 6 modules.
+ 
+ Recent activity feed.
+ 
+Document Manager
+ Upload button (drag-and-drop) supporting PDF, DOCX, TXT.
+ 
+ List view of all uploaded docs with status badge.
+ 
+ Delete and preview options per document.
+ 
+ Processing indicator for newly uploaded files.
+ 
+AI Chat (Doc Q&A;)
+ Chat-style interface (user bubble + AI bubble).
+ 
+ Source citation shown below each AI answer.
+ 
+ Conversation history within session.
+ 
+ Clear chat and new session buttons.
+ 
+Email Draft Generator
+ Text area: 'Paste customer email here'.
+ 
+ Tone selector: Formal / Friendly / Concise.
+ 
+ Generate button → displays draft below.
+ 
+ Copy to clipboard and Regenerate buttons.
+ 
+Lead Summarizer
+ Paste raw inquiry text.
+ 
+ Click Analyze → AI returns structured lead card.
+ 
+ Lead card shows: Name, Interest, Budget, Urgency, Priority Score.
+ 
+ Save to Leads Database button.
+ 
+Leads Dashboard
+ Table of all saved leads with filter + sort.
+ 
+ Click any lead to expand full summary.
+ 
+ Export to CSV option.
+ 
+Report / Summary Generator
+
+
+=== PAGE 10 ===
+ Paste raw notes, transcript, or meeting text.
+ 
+ Click Summarize → AI returns structured summary + action items.
+ 
+ Copy and Download as TXT options.
+ 
+Settings
+ Business profile: name, logo, tone preference.
+ 
+ API usage stats and plan info.
+ 
+ Delete account option.
+
+
+=== PAGE 11 ===
+8. 90-Day Build Roadmap
+Week
+Focus
+Deliverables
+Status
+1
+Project Setup
+Repo init, FastAPI skeleton, React app, DB setup, auth endpoints
+Todo
+2
+Document Upload
+File upload API, S3 integration, chunking pipeline, embedding storage
+Todo
+3
+RAG Engine
+FAISS/Chroma integration, semantic search, Q&A endpoint + basic UI
+Todo
+4
+Chat UI
+React chat interface, source display, conversation logging
+Todo
+5
+Email Draft
+Email generator endpoint, tone selector UI, copy/regenerate features
+Todo
+6
+Lead Summarizer
+Lead extraction endpoint, lead card UI, leads database + list view
+Todo
+7
+Report Generator
+Summary endpoint, paste interface, download feature
+Todo
+8
+n8n Workflows
+Email → AI draft workflow, form → lead workflow, webhook endpoints
+Todo
+9
+Auth + Dashboard
+JWT auth, full dashboard home, stats API, settings page
+Todo
+10
+Testing
+Unit tests, integration tests, bug fixes, mobile responsiveness
+Todo
+11
+Deploy
+Vercel deploy (FE), Render deploy (BE), domain, SSL, env config
+Todo
+12
+Launch Prep
+Landing page, demo video, README, GitHub publish, first outreach
+Todo
+ Month 1: Core Foundation
+ Month 2: Features + Automation
+ Month 3: Polish + Launch
+
+
+=== PAGE 12 ===
+9. Resume & Portfolio Value
+How to Describe This Project
+Job Title Target: AI Engineer / Full-Stack Developer / ML Engineer
+Bullet 1: Built a full-stack AI Operations SaaS for SMBs featuring RAG-based document
+intelligence, automated customer support, and lead processing — deployed on Vercel + Render
+with FastAPI and React.
+Bullet 2: Designed and implemented a multi-module AI platform integrating OpenAI GPT-4o,
+FAISS vector search, PostgreSQL, and n8n automation workflows for real business use cases.
+Bullet 3: Architected end-to-end RAG pipeline with document chunking, embedding generation,
+semantic retrieval, and cited AI responses — used by small businesses to automate 40%+ of
+repetitive operational tasks.
+Skills Demonstrated
+Skill Area
+Evidence from This Project
+Backend Engineering
+FastAPI REST API with auth, file handling, and AI endpoints
+Frontend Development
+React dashboard with chat UI, forms, and real-time updates
+AI / LLM Integration
+RAG pipeline with OpenAI embeddings and GPT-4o completions
+Database Design
+PostgreSQL schema with relational data, UUID keys, and indexing
+DevOps / Deployment
+Cloud deployment, environment config, CI/CD basics on Render + Vercel
+Automation Engineering
+n8n workflows connecting external tools to your backend
+Product Thinking
+End-to-end SaaS with real user flows, not just a script
+
+
+=== PAGE 13 ===
+10. Monetization Strategy
+Plan
+Price
+Limits
+Target
+Free
+■0 / mo
+3 docs, 50 queries/mo, 1 user
+Testing / Trial
+Starter
+■999 / mo
+(~$9)
+20 docs, 500 queries/mo, 3 users
+Solo operators
+Pro
+■2,499 / mo
+(~$23)
+100 docs, 2,000 queries/mo, 10 users
+SMBs, agencies
+Enterprise
+Custom
+Unlimited + white-label + API access
+Larger clients
+Honest Risk Assessment
+■ Over-engineering risk
+Start with Module 1 (Doc Q&A;) only. Ship it. Then add modules
+one at a time.
+■ API cost risk
+Set per-user query limits. Use caching for repeated queries.
+Monitor OpenAI spend weekly.
+■ Competitor risk
+You're not competing with ChatGPT. You're serving SMBs who
+want a ready-made tool for their business, not a general AI.
+■ Scope creep
+Use this PRD as your contract with yourself. Do not add features
+outside this document until v1 is live.
+
+
+=== PAGE 14 ===
+11. Week-by-Week Execution Checklist
+Week 1 — Project Foundation
+■ Initialize GitHub repo with monorepo structure (frontend/, backend/)
+ 
+■ Create FastAPI project skeleton with folder structure
+ 
+■ Set up PostgreSQL locally and on cloud (Railway or Supabase)
+ 
+■ Create users table + JWT auth endpoints (/register, /login)
+ 
+■ Initialize React app with Tailwind CSS
+ 
+■ Build Login and Register pages in React
+ 
+■ Connect React to FastAPI auth endpoints
+ 
+■ Test auth flow end to end
+ 
+Week 2 — Document Upload Pipeline
+■ Add documents table to PostgreSQL
+ 
+■ Build /documents/upload endpoint in FastAPI (accept PDF, DOCX, TXT)
+ 
+■ Integrate S3 or Cloudflare R2 for file storage
+ 
+■ Build document chunking logic (split by paragraph/token count)
+ 
+■ Generate embeddings using OpenAI text-embedding-3-small
+ 
+■ Store chunks + embeddings in FAISS or Chroma
+ 
+■ Build Document Manager UI in React (upload + list view)
+ 
+■ Add delete document functionality
+ 
+Week 3–4 — RAG Q&A; Engine + Chat UI
+■ Build /chat/query endpoint: receive question → embed → retrieve → GPT answer
+ 
+■ Include source citation in API response
+ 
+■ Store all queries in chat_logs table
+ 
+■ Build React Chat UI: message bubbles, source display
+ 
+■ Test with multiple document types and queries
+ 
+■ Handle edge case: question not in any document
+ 
+Week 5–6 — Email Draft + Lead Summarizer
+■ Build /email/draft endpoint with tone parameter
+ 
+■ Prompt engineer the draft for business-appropriate output
+ 
+■ Build Email Draft UI: paste area, tone selector, draft display
+ 
+■ Build /leads/summarize endpoint: extract name, interest, budget, urgency
+ 
+■ Generate priority score (1–10) with brief justification
+ 
+■ Store lead to leads table
+ 
+■ Build Lead Card UI and Leads Dashboard list view
+ 
+Week 7–8 — Report Generator + n8n Integration
+■ Build /reports/summarize endpoint: structure raw notes into summary + action items
+ 
+■ Build Report Generator UI: paste area + output display
+ 
+■ Set up n8n instance (cloud or self-hosted)
+ 
+■ Create n8n workflow: Gmail trigger → /email/draft → save draft
+
+
+=== PAGE 15 ===
+■ Create n8n workflow: form submission → /leads/summarize → CRM or Notion
+ 
+■ Test both n8n workflows end to end
+ 
+■ Document webhook endpoints for n8n connections
+ 
+Week 9–10 — Dashboard + Testing
+■ Build Dashboard home with stats: queries, leads, docs
+ 
+■ Build Settings page: business name, tone preference
+ 
+■ Add API usage tracking to backend
+ 
+■ Write unit tests for all endpoints
+ 
+■ Fix bugs found during testing
+ 
+■ Ensure mobile responsiveness on all pages
+ 
+Week 11–12 — Deploy + Launch
+■ Deploy frontend to Vercel with custom domain
+ 
+■ Deploy backend to Render with environment variables set
+ 
+■ Configure CORS, SSL, production PostgreSQL
+ 
+■ Record a 2-minute demo video of all features
+ 
+■ Write a clean README.md with setup instructions
+ 
+■ Publish GitHub repo (public)
+ 
+■ Write a LinkedIn post or landing page about the product
+ 
+■ Reach out to 3–5 potential users for feedback
+
+
+=== PAGE 16 ===
+Final Note
+You are not building a side project. You are building a product.
+Every week you ship a working feature, you have something real to show — to
+employers, to customers, and to yourself. The goal is not perfection. The goal is a live,
+working SaaS product that solves a real problem for real businesses.
+Use this document as your source of truth. When in doubt, refer back here. When you
+feel lost, open Week 1 and do the next unchecked task.
+Build it. Ship it. Own it.
+ AI Operations Assistant — PRD v1.0
+ Generated May 2026
+ For Personal Use
