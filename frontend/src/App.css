@@ -1,3 +1,56 @@
+.dashboard-shell {
+  display: flex;
+  min-height: 100svh;
+  text-align: left;
+}
+
+.sidebar {
+  width: 240px;
+  flex: 0 0 240px;
+  padding: 20px 16px;
+  background: #111827;
+  box-sizing: border-box;
+}
+
+.sidebar-title {
+  margin: 0 0 24px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #d1d5db;
+  text-decoration: none;
+}
+
+.sidebar-link:hover,
+.sidebar-link.is-active {
+  color: #fff;
+  background: var(--accent);
+}
+
+.dashboard-content {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+}
+
+.dashboard-page,
+.auth-page {
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
 .documents-page {
   width: min(980px, calc(100% - 32px));
   margin: 0 auto;
