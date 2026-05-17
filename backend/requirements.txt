@@ -10,6 +10,6 @@ python-multipart
 python-dotenv
 pypdf
 tiktoken
-openai
+google-genai
 python-docx
 chromadb

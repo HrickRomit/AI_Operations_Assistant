@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import check_database_connection
-from app.routes import documents, auth
+from app.routes import documents, auth, chat
 
 app = FastAPI(title="AI Operations Assistant API")
 
@@ -19,6 +19,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(documents.router)
+app.include_router(chat.router)
 
 
 @app.get("/")

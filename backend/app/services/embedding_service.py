@@ -1,36 +1,38 @@
-from openai import OpenAI
+from google import genai
+from google.genai import types
 
 from app.core.config import settings
 
-EMBEDDING_MODEL = "text-embedding-3-small"
+
+def get_gemini_client() -> genai.Client:
+    if not settings.GEMINI_API_KEY:
+        raise RuntimeError("GEMINI_API_KEY is required to create document embeddings.")
+
+    return genai.Client(api_key=settings.GEMINI_API_KEY)
 
 
-def get_openai_client() -> OpenAI:
-    if not settings.OPENAI_API_KEY:
-        raise RuntimeError("OPENAI_API_KEY is required to create document embeddings.")
+def create_embedding(text: str, task_type: str = "RETRIEVAL_QUERY") -> list[float]:
+    client = get_gemini_client()
 
-    return OpenAI(api_key=settings.OPENAI_API_KEY)
-
-
-def create_embedding(text:str)-> list[float]:
-    client = get_openai_client()
-
-    response = client.embeddings.create(
-        model = EMBEDDING_MODEL,
-        input = text,
+    response = client.models.embed_content(
+        model=settings.gemini_embedding_model,
+        contents=text,
+        config=types.EmbedContentConfig(task_type=task_type),
     )
-    return response.data[0].embedding
+
+    return response.embeddings[0].values
 
 
-def create_embeddings(texts:list[str]) -> list[list[float]]:
+def create_embeddings(texts: list[str]) -> list[list[float]]:
     if not texts:
         return []
 
-    client = get_openai_client()
-    
-    response = client.embeddings.create(
-        model = EMBEDDING_MODEL,
-        input = texts,
+    client = get_gemini_client()
+
+    response = client.models.embed_content(
+        model=settings.gemini_embedding_model,
+        contents=texts,
+        config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT"),
     )
 
-    return [item.embedding for item in response.data]
+    return [embedding.values for embedding in response.embeddings]

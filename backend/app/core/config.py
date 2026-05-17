@@ -12,8 +12,10 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
     )
-    OPENAI_API_KEY: str = ""
-    chroma_dir: str = "chroma_db"
+    GEMINI_API_KEY: str = ""
+    gemini_embedding_model: str = "gemini-embedding-001"
+    gemini_chat_model: str = "gemini-2.0-flash"
+    chroma_dir: str = "chroma_db_gemini"
     upload_dir: str = "uploads"
 
 
