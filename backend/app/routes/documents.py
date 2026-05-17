@@ -1,12 +1,10 @@
-from annotated_types import doc
-from fastapi import APIRouter, Depends, UploadFile, File , HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
-import os
-import shutil
-import uuid
 
 from app.core.database import get_db
 from app.models.document import Document
+from app.services.rag_service import delete_document_chunks
+from app.services.upload_service import process_uploaded_document
 
 
 router = APIRouter(
@@ -14,62 +12,53 @@ router = APIRouter(
     tags=["documents"],
 )
 
-upload_folder = "uploads"
-
-os.makedirs(upload_folder, exist_ok=True)
-
 
 @router.get("/")
 def list_documents(db: Session = Depends(get_db)):
-    docs = db.query(Document).all()
-    return [{
-        "id" : str(doc.id),
-        "filename" : doc.filename,
-       "status" : doc.status,
-        "uploaded_at" : doc.uploaded_at
-    }
-    for doc in docs 
+    docs = db.query(Document).order_by(Document.uploaded_at.desc()).all()
+
+    return [
+        {
+            "id": str(doc.id),
+            "filename": doc.filename,
+            "status": doc.status,
+            "chunk_count": doc.chunk_count,
+            "uploaded_at": doc.uploaded_at,
+        }
+        for doc in docs
     ]
 
 
 @router.post("/upload")
-def upload_document(file: UploadFile = File(...),
-                db:Session = Depends(get_db)):
-    file_path = os.path.join(upload_folder, file.filename)
+def upload_document(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    try:
+        document = process_uploaded_document(file, db)
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    fake_user_id = uuid.UUID("11111111-1111-1111-1111-111111111111")
+        return {
+            "message": "File uploaded and processed successfully",
+            "document_id": str(document.id),
+            "filename": document.filename,
+            "status": document.status,
+            "chunk_count": document.chunk_count,
+        }
 
-    new_doc = Document(
-        user_id = fake_user_id,
-        filename = file.filename,
-        storage_url = file_path,
-        status = "ready"
-    )
-
-
-    db.add(new_doc)
-    db.commit()
-    db.refresh(new_doc)
-
-    return {
-        "message": "File uploaded successfully",
-        "document_id" : str(new_doc.id),
-        "filename": file.filename
-    }
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.delete("/{doc_id}")
 def delete_document(doc_id: str, db: Session = Depends(get_db)):
-    doc = db.query(Document).filter(Document.id == doc_id).first()
-    if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
-    
-    if os.path.exists(doc.storage_url):
-        os.remove(doc.storage_url)
+    document = db.query(Document).filter(Document.id == doc_id).first()
 
-    db.delete(doc)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    delete_document_chunks(str(document.id))
+
+    db.delete(document)
     db.commit()
+
     return {"message": "Document deleted successfully"}

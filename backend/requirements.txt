@@ -11,3 +11,5 @@ python-dotenv
 pypdf
 tiktoken
 openai
+python-docx
+chromadb
