@@ -89,6 +89,7 @@ def process_document(db: Session, doc: Document) -> None:
         {
             "filename": doc.filename,
             "chunk_index": index,
+            "user_id": str(doc.user_id),
         }
         for index in range(len(chunks))
     ]

@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     )
     GEMINI_API_KEY: str = ""
     gemini_embedding_model: str = "gemini-embedding-001"
-    gemini_chat_model: str = "gemini-2.0-flash"
+    gemini_chat_model: str = "gemini-2.5-flash"
     chroma_dir: str = "chroma_db_gemini"
     upload_dir: str = "uploads"
 

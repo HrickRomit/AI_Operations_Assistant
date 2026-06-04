@@ -53,3 +53,10 @@ def login(
         user.id, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+from app.routes.deps import get_current_user
+
+@router.get("/me", response_model=UserSchema)
+def read_user_me(current_user: User = Depends(get_current_user)):
+    return current_user

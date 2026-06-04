@@ -43,6 +43,7 @@ def query_documents(query_embedding: list[float], n_results: int = 5, filter: di
     """
     collection = get_collection()
     
+    
     results = collection.query(
         query_embeddings=[query_embedding],
         n_results=n_results,
@@ -65,27 +66,27 @@ def delete_document_chunks(doc_id: str):
     """
     delete_document_from_rag(doc_id)
 
-def search_similar_chunks(question: str, n_results:int = 5) -> list[dict]:
+
+def search_similar_chunks(question: str, user_id: str, n_results: int = 5) -> list[dict]:
     query_embedding = create_embedding(question, task_type="RETRIEVAL_QUERY")
 
     results = query_documents(
         query_embedding=query_embedding,
         n_results=n_results,
+        filter={"user_id": str(user_id)}
     )
     documents = results.get("documents", [[]])[0]
     metadatas = results.get("metadatas", [[]])[0]
     distances = results.get("distances", [[]])[0]
     
-    matches= []
+    matches = []
     for index, document_text in enumerate(documents):
         metadata = metadatas[index] if index < len(metadatas) else {}
         distance = distances[index] if index < len(distances) else None
 
         matches.append({
-            "text" : document_text,
+            "text": document_text,
             "metadata": metadata,
             "distance": distance, 
         })
     return matches
-
-

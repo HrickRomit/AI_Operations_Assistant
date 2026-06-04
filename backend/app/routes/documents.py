@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.document import Document
+from app.models.user import User
+from app.routes.deps import get_current_user
 from app.services.rag_service import delete_document_chunks
 from app.services.upload_service import process_uploaded_document
 
@@ -14,8 +16,16 @@ router = APIRouter(
 
 
 @router.get("/")
-def list_documents(db: Session = Depends(get_db)):
-    docs = db.query(Document).order_by(Document.uploaded_at.desc()).all()
+def list_documents(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    docs = (
+        db.query(Document)
+        .filter(Document.user_id == current_user.id)
+        .order_by(Document.uploaded_at.desc())
+        .all()
+    )
 
     return [
         {
@@ -33,9 +43,10 @@ def list_documents(db: Session = Depends(get_db)):
 def upload_document(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     try:
-        document = process_uploaded_document(file, db)
+        document = process_uploaded_document(file, db, user_id=current_user.id)
 
         return {
             "message": "File uploaded and processed successfully",
@@ -50,8 +61,16 @@ def upload_document(
 
 
 @router.delete("/{doc_id}")
-def delete_document(doc_id: str, db: Session = Depends(get_db)):
-    document = db.query(Document).filter(Document.id == doc_id).first()
+def delete_document(
+    doc_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    document = (
+        db.query(Document)
+        .filter(Document.id == doc_id, Document.user_id == current_user.id)
+        .first()
+    )
 
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -61,4 +80,4 @@ def delete_document(doc_id: str, db: Session = Depends(get_db)):
     db.delete(document)
     db.commit()
 
-    return {"message": "Document deleted successfully"}
+    return {"message": "Document deleted successfully"}

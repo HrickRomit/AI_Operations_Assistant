@@ -12,8 +12,8 @@ def get_gemini_client() -> genai.Client:
     return genai.Client(api_key=settings.GEMINI_API_KEY)
 
 
-def answer_question(question: str) -> dict:
-    matches = search_similar_chunks(question, n_results=5)
+def answer_question(question: str, user_id: str) -> dict:
+    matches = search_similar_chunks(question, user_id=user_id, n_results=5)
 
     if not matches:
         return {

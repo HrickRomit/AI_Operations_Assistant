@@ -38,11 +38,13 @@ def parse_docx(path: Path) -> str:
     try:
         from docx import Document as DocxDocument
     except ImportError as exc:
-        raise RuntimeError(
+        raise ImportError(
             "DOCX parsing requires python-docx. Install it with: pip install python-docx"
         ) from exc
 
-    document = DocxDocument(str(path))
-    paragraphs = [paragraph.text for paragraph in document.paragraphs if paragraph.text.strip()]
-
-    return "\n\n".join(paragraphs)
+    try:
+        document = DocxDocument(str(path))
+        paragraphs = [p.text for p in document.paragraphs if p.text.strip()]
+        return "\n\n".join(paragraphs)
+    except Exception as e:
+        raise ValueError(f"Failed to parse DOCX file: {str(e)}")
