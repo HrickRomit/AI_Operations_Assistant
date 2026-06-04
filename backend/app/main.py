@@ -2,9 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import Base, engine, check_database_connection
-from app.routes import documents, auth, chat
+from app.routes import auth, chat, dashboard, documents, email, leads, reports
+from app.models.chatlog import ChatLog
 from app.models.user import User
 from app.models.document import Document
+from app.models.lead import Lead
 
 app = FastAPI(title="AI Operations Assistant API")
 
@@ -30,6 +32,10 @@ def startup_event():
 app.include_router(auth.router)
 app.include_router(documents.router)
 app.include_router(chat.router)
+app.include_router(email.router)
+app.include_router(leads.router)
+app.include_router(reports.router)
+app.include_router(dashboard.router)
 
 
 @app.get("/")
@@ -46,4 +52,3 @@ def health():
 def database_health():
     check_database_connection()
     return {"status": "ok", "database": "connected"}
-
